@@ -1,0 +1,194 @@
+{% extends "shop/basic.html" %}
+
+    {% block title %} shop  {% endblock %}
+   
+  
+
+      {% block body %}
+      <br>
+      <br>
+      <div class="container">
+        
+      <div class="row">
+        {% for i in product|slice:"0:" %}
+        <div class="col-sm-6 mb-3 mb-sm-0">
+          <div class="card" style="width: 18rem;">
+            <img src="/media/{{i.image}}" class="card-img-top" alt="...">
+            <div class="card-body">
+              <h5 class="card-title" id="namepr{{i.id}}">{{i.product_name}}</h5>
+              <p class="card-text">{{i.desc|slice:"0:53"}}...</p>
+              <p class="card-text" id="pricepr{{i.id}}">Rs{{i.price}}</p>
+
+              
+              <span id="divpr{{i.id}}" class="divpr">
+              <button id="pr{{i.id}}" class="btn btn-primary cart">Add To CART</button>
+             </span>
+              <a href="/shop/productview/{{i.id}}"> <button id="qv{{i.id}}" class="btn btn-primary cart">Quick view</button></a>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+        
+      </div>
+    </div>
+    <!-- Hidden container for cart popover content -->
+<div id="cart-popover-content" style="display: none;"></div>
+
+     {% endblock %}
+
+     
+  {% block js %}
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  let cart = localStorage.getItem("cart") ? JSON.parse(localStorage.getItem("cart")) : {};
+
+  function updatecart(cart) {
+    let totalItems = 0;
+
+    for (let item in cart) {
+      totalItems += cart[item].qty;
+
+      const div = document.getElementById("div" + item);
+      if (div) {
+        div.innerHTML = `
+          <button id="minus${item}" class="btn btn-primary minus"> - </button>
+          <span id="val${item}" class="mx-2">${cart[item].qty}</span>
+          <button id="plus${item}" class="btn btn-primary plus"> + </button>
+        `;
+      }
+    }
+
+    const cartDisplay = document.getElementById("cart");
+    if (cartDisplay) {
+      cartDisplay.innerText = totalItems;
+    }
+
+    localStorage.setItem("cart", JSON.stringify(cart));
+    updatePopover(cart);
+
+    const cartNavActions = document.getElementById("cart-nav-actions");
+    if (cartNavActions) {
+      cartNavActions.style.display = totalItems > 0 ? "flex" : "none";
+    }
+  }
+
+  function updatePopover(cart) {
+    console.log('We are inside updatePopover');
+
+    let popStr = "<h5>Cart for your items</h5><div class='mx-2 my-2'>";
+    let i = 1;
+
+    for (let item in cart) {
+      let name = cart[item].name || "Unknown Item";
+      popStr += `<b>${i}</b>. ${name}... Qty: ${cart[item].qty}<br>`;
+      i++;
+    }
+
+    popStr += `</div>
+      <div class="d-flex justify-content-start mt-2">
+        <a href='/shop/checkout'><button class='btn btn-success btn-sm me-2'>Checkout</button></a>
+        <button class='btn btn-danger btn-sm' id='clearCartBtn'>Clear Cart</button>
+      </div>`;
+
+    const popTarget = document.getElementById('popcart');
+    popTarget.setAttribute('data-bs-content', popStr);
+
+    const existing = bootstrap.Popover.getInstance(popTarget);
+    if (existing) existing.dispose();
+
+    new bootstrap.Popover(popTarget, {
+      html: true,
+      content: popStr,
+      trigger: 'focus',
+      placement: 'bottom'
+    });
+
+    popTarget.focus();
+
+    setTimeout(() => {
+      let clearBtn = document.getElementById('clearCartBtn');
+      if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+          clearcart();
+          const popInstance = bootstrap.Popover.getInstance(popTarget);
+          if (popInstance) popInstance.hide();
+        });
+      }
+    }, 200);
+  }
+
+  function clearcart() {
+    for (let item in cart) {
+      const div = document.getElementById("div" + item);
+      if (div) {
+        div.innerHTML = `<button id="${item}" class="btn btn-primary cart">Add To CART</button>`;
+      }
+    }
+    cart = {};
+    localStorage.clear();
+    updatecart(cart);
+  }
+
+  document.getElementById("clearCartNavBtn").addEventListener("click", function () {
+    clearcart();
+  });
+
+  // ADD TO CART Button
+  $(document).on("click", ".cart", function () {
+  const id = this.id;
+
+  // Get product name
+  const nameElement = document.getElementById("name" + id);
+  const name = nameElement ? nameElement.innerText.trim() : "Unnamed Product";
+
+  // ✅ Get and clean product price
+  const priceElement = document.getElementById("price" + id);
+  let price = 0;
+
+  if (priceElement) {
+    let rawText = priceElement.innerText || priceElement.textContent || "";
+    console.log("Raw price text:", rawText); // 🔍 debug line
+
+    // Extract only the first number using regex
+    const match = rawText.match(/[\d,.]+/);
+    if (match) {
+      let cleaned = match[0].replace(/,/g, ""); // remove commas
+      price = parseFloat(cleaned);
+      console.log("Parsed price:", price); // 🔍 debug line
+    }
+  }
+
+  if (!cart[id]) {
+    cart[id] = { qty: 0, name: name, price: price };
+  }
+
+  cart[id].qty += 1;
+  updatecart(cart);
+});
+  // PLUS Button
+  $(document).on("click", ".plus", function () {
+    const id = this.id.slice(4);
+    cart[id].qty += 1;
+    updatecart(cart);
+  });
+
+  // MINUS Button
+  $(document).on("click", ".minus", function () {
+    const id = this.id.slice(5);
+    cart[id].qty -= 1;
+    if (cart[id].qty <= 0) {
+      delete cart[id];
+    }
+    updatecart(cart);
+  });
+
+  // On page load
+  $(document).ready(function () {
+    updatecart(cart);
+  });
+</script>
+
+
+    {% endblock %}

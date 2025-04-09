@@ -1,0 +1,148 @@
+{% extends "shop/basic.html" %}
+
+{% block title %} checkouts {% endblock %}
+{% block body %} 
+
+<div class="container">
+    <div class="col my-4">
+        <h2> Your Items </h2>
+        <div >
+            <ol class="list-group list-group-numbered" id="items">
+                
+              </ol>
+        </div>
+        <div class="alert alert-secondary mt-3" role="alert">
+          Total Price: ₹<span id="totalPrice">0.00</span>
+        </div>
+        
+        
+    </div>
+     <br>
+     <br>
+    <div class="col my-4">
+        <h1> Enter Your details </h1>
+        <div class="container mt-5">
+            
+            <form method="POST" action="/shop/checkout/">
+              <!-- CSRF Token (for Django) -->
+              {% csrf_token %}
+              <input type="hidden" name="itemsJson" id="itemsJson">
+              <input type="hidden" name="amount" id="amount">
+              <div class="mb-3">
+                <label for="name" class="form-label">Full Name</label>
+                <input type="text" class="form-control" id="name" name="name" placeholder="name" required>
+              </div>
+          
+              <div class="mb-3">
+                <label for="email" class="form-label">Email address</label>
+                <input type="email" class="form-control" id="email" name="email" placeholder="you@example.com" required>
+              </div>
+          
+              <div class="mb-3">
+                <label for="phone" class="form-label">Phone Number</label>
+                <input type="tel" class="form-control" id="phone" name="phone" placeholder="Phone" required>
+              </div>
+          
+              <div class="mb-3">
+                <label for="address" class="form-label">Shipping Address</label>
+                <textarea class="form-control" id="address" name="address" rows="3" required></textarea>
+              </div>
+          
+              <div class="mb-3">
+                <label for="city" class="form-label">City</label>
+                <input type="text" class="form-control" id="city" name="city" required>
+              </div>
+
+              <div class="mb-3">
+                <label for="state" class="form-label">state</label>
+                <input type="text" class="form-control" id="state" name="state" required>
+              </div>
+          
+          
+              <div class="mb-3">
+                <label for="zip" class="form-label">ZIP Code</label>
+                <input type="text" class="form-control" id="zip" name="zip" required>
+              </div>
+          
+              <button type="submit" class="btn btn-primary">Place Order</button>
+            </form>
+          </div>
+          
+    </div>
+</div>
+
+{% endblock %}
+
+{% block js %} 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  let cart = localStorage.getItem("cart") ? JSON.parse(localStorage.getItem("cart")) : {};
+  console.log("Loaded cart:", cart);
+
+  let totalItems = 0;
+  let totalPrice = 0;
+
+  if ($.isEmptyObject(cart)) {
+    let mystr = `<p>Your cart is empty, please add some items to your cart</p>`;
+    $("#items").append(mystr);
+    $("#total-price-alert").text(""); // Clear the alert if empty
+  } else {
+    for (let item in cart) {
+      let name = cart[item].name || "Unnamed";
+      let qty = cart[item].qty || 0;
+
+      // ✅ Fixed: Clean up price string and extract only numeric part
+      let rawPrice = cart[item].price?.toString().trim() || "0";
+      rawPrice = rawPrice.replace(/[^\d.]/g, "");  // remove ₹, Rs., etc.
+      let price = parseFloat(rawPrice);
+      if (isNaN(price)) {
+        console.warn(`Invalid price for item ID ${item}:`, cart[item].price);
+        price = 0;
+      }
+
+      totalItems += qty;
+      totalPrice += qty * price;
+
+      console.log(`Item: ${name}, Qty: ${qty}, Price: ₹${price}, Subtotal: ₹${qty * price}`);
+
+      let mystr = `
+        <li class="list-group-item d-flex justify-content-between align-items-start">
+          <div class="ms-2 me-auto">
+            <div class="fw-bold">${name}</div>
+            Product ID: ${item}<br>
+            Price: ₹${price}X${qty}
+          </div>
+          <span class="badge text-bg-primary rounded-pill">₹${(qty * price).toFixed(2)}</span>
+        </li>`;
+        
+      $('#items').append(mystr);
+    }
+
+    // ✅ Show total price
+    // ✅ Show total price and set hidden input
+$("#totalPrice").text(totalPrice.toFixed(2));    // updates visible price
+
+
+  }
+
+  // ✅ Update cart count (in navbar)
+  $("#cart").text(totalItems);
+
+  // ✅ Store cart data in hidden form field for backend
+  $("#itemsJson").val(JSON.stringify(cart));
+
+  // ✅ Handle post-order message and clear cart
+  {% if thank %}
+    alert("Thanks For ordering with us. Your Order ID is {{id}}. Use it to track your order.");
+    document.location = "/shop";
+    localStorage.clear();
+  {% endif %}
+
+  $("#amount").val(totalPrice.toFixed(2));         // hidden input for backend
+</script>
+
+
+
+{% endblock %}

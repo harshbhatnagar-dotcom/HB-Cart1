@@ -1,0 +1,70 @@
+{% extends "shop/basic.html" %}
+
+{% block title %} Tracker {% endblock %}
+{% block body %} 
+
+<div class="container">
+    <div class="col my-4">
+        <h2> Tracker -Enter yyour Order Id and email Adress To track Your Order </h2>
+        <form method="POST" action="/shop/tracker/" id="trackerform">
+            <!-- CSRF Token (for Django) -->
+            {% csrf_token %}
+           
+            <div class="mb-3">
+              <label for="order_id" class="form-label">Order_id</label>
+              <input type="text" class="form-control" id="Order_id" name="Order_id" placeholder="order id" required>
+            </div>
+        
+            <div class="mb-3">
+              <label for="email" class="form-label">Email address</label>
+              <input type="email" class="form-control" id="email" name="email" placeholder="you@example.com" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Track Order</button>
+            </form>
+        
+       
+    </div>
+     <br>
+     <br>
+    <div class="col my-4">
+        <h2> Your Order Status</h2>
+        
+       
+  {% if items %}
+  <h4 class="mt-4">Ordered Items:</h4>
+  <ul class="list-group">
+    {% for key, item in items.items %}
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        <div>
+          <strong>{{ item.name }}</strong><br>
+          Quantity: {{ item.qty }}
+        </div>
+      </li>
+    {% endfor %}
+  </ul>
+{% endif %}
+    
+<br>
+<br>
+  </ul>
+        {% if error %}
+    <div class="alert alert-warning">{{ error }}</div>
+    {% endif %}
+
+        {% if orderupdates %}
+        <h4>Order Updates:</h4>
+        <ul class="list-group">
+            {% for update in orderupdates %}
+            <li class="list-group-item">
+                <strong>{{ update.timestamp }}</strong><br>
+                {{ update.update_desc }}
+            </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+          
+    </div>
+</div>
+
+{% endblock %}
+

@@ -1,0 +1,301 @@
+hello my name is harsh
+
+{% load static %}
+    <a href="{%static 'shop/mystatic.txt' %}">click me</a>
+
+
+function updatecart(cart){
+  
+  for (var item in cart)
+{
+  document.getElementById("div" +item).innerHTML="<button id='minus" + item + "' class='btn btn-primary minus'> - </button> <span id='val" +item + " ''>" +cart[item] +
+    "</span> <button id='plus" +item+ "' class='btn btn-primary plus'> + </button>";
+}
+}
+
+function updatepopover(){
+  var popStr="";
+  popStr=popStr+"<h5> cart popver </h5>";
+  var i = 1;
+  for (var item in cart){
+    popStr=popStr="<b>" + i + "</b> .";
+    popStr =popStr +document.getElementById("name"+ item  ).innerHTML+" Qty: "+ cart[item]+"<br>";
+      i = i+1;
+  }
+  document.getElementById("popcart").setAttribute("data-bs-content",popStr);
+  $(document).ready(function () {
+    $('#popcart').popover("show"); // Initialize popover
+});
+ 
+}
+
+
+
+
+ <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+  <script>
+    
+  // find out the cart items form local storage
+    if(localStorage.getItem("cart")==null)
+  {
+    var cart ={};
+  }
+  else 
+  {
+    cart=JSON.parse(localStorage.getItem("cart"));
+    document.getElementById("cart").innerHTML=Object.keys(cart).length;
+    updatecart(cart)
+  }
+
+  // if the the to cart button is clicked
+  $('.cart').click(function(){
+    
+    var idstr=this.id.toString();
+   
+    if (cart[idstr] !=undefined){
+      cart[idstr]=cart[idstr]+1;
+ }
+   else {
+    cart[idstr]=1;
+   }
+
+   updatecart(cart);
+
+   localStorage.setItem("cart",JSON.stringify(cart));
+   document.getElementById("cart").innerHTML=Object.keys(cart).length;
+  });
+
+
+  // add pop over
+  $(document).ready(function () {
+    $('#popcart').popover(); // Initialize popover
+});
+
+
+updatepopover(cart);
+function updatepopover() {
+  var popStr = "<h5>Cart</h5>";
+  var i = 1;
+
+  for (var item in cart) {
+    popStr += "<b>" + i + "</b>. ";
+    let nameElement = document.getElementById("name" + item);
+    let nameText = nameElement ? nameElement.innerHTML : "Unknown";
+    popStr += nameText + " Qty: " + cart[item] + "<br>";
+    i++;
+  }
+
+  document.getElementById("popcart").setAttribute("data-bs-content", popStr);
+
+  // Ensure Bootstrap Popover Updates
+  $(document).ready(function () {
+    $('#popcart').popover('dispose').popover({ html: true, trigger: 'hover' }).popover('show');
+  });
+}
+
+
+
+function updatecart(cart) {
+  var sum = 0;
+  var cartContainer = document.getElementById("cart-popover-content");
+  if (!cartContainer) {
+    console.error("Cart popover container (id='cart-popover-content') not found.");
+    return;
+  }
+
+  cartContainer.innerHTML = ''; // Clear previous content
+
+  for (var item in cart) {
+    if (!cart[item]) {
+      cart[item] = 0;
+    }
+
+    sum += cart[item];
+
+    let div = document.createElement("div");
+    div.id = "div" + item;
+    div.innerHTML = 
+     ' <button id='minus${item}' class='btn btn-primary minus'> - </button> 
+      <span id='val${item}'>${cart[item]}</span> 
+      <button id='plus${item}' class='btn btn-primary plus'> + </button>
+    '
+
+    cartContainer.appendChild(div);
+  }
+
+  // Add Clear Cart and Checkout buttons
+  const controlsDiv = document.createElement("div");
+  controlsDiv.innerHTML = 
+    <hr>
+    <button id="clear-cart" class="btn btn-danger m-1">Clear Cart</button>
+    <button id="checkout" class="btn btn-success m-1">Checkout</button>
+  ;
+  cartContainer.appendChild(controlsDiv);
+
+  // Attach event listeners after rendering buttons
+  document.getElementById("clear-cart").addEventListener("click", function () {
+    if (confirm("Are you sure you want to clear the cart?")) {
+      clearcart();
+    }
+  });
+
+  document.getElementById("checkout").addEventListener("click", function () {
+    alert("Proceeding to checkout...");
+    // Implement your checkout logic here
+  });
+
+  function clearcart() {
+    cart = JSON.parse(localStorage.getItem("cart")) || {};
+    for (var item in cart) {
+      let divEl = document.getElementById("div" + item);
+      if (divEl) {
+        divEl.innerHTML = `<button id="${item}" class="btn btn-primary cart">Add To CART</button>`;
+      }
+    }
+    localStorage.clear();
+    cart = {};
+    updatecart(cart);
+  }
+}
+
+  // Update cart counter
+  let cartElement = document.getElementById("cart");
+  if (cartElement) {
+    cartElement.innerHTML = sum; 
+  } else {
+    console.error("Element with id 'cart' not found");
+  }
+
+  localStorage.setItem("cart", JSON.stringify(cart)); // Save updated cart
+  updatepopover(cart);
+}
+
+
+
+
+// plus minus plus button cliked
+$(".divpr").on("click","button.minus",function()
+{
+  console.log("minus clicked")
+  a=this.id.slice(7, );
+  cart["pr"+a]=cart["pr"+a]-1;
+  cart["pr"+a]=Math.max(0, cart["pr"+a]);
+  document.getElementById("valpr"+a).innerHTML=cart["pr" +a];
+  updatecart(cart);
+}
+
+);
+
+$(".divpr").on("click","button.plus",function()
+{
+
+  a=this.id.slice(6, );
+  cart["pr"+a]= cart["pr"+a] + 1;
+  document.getElementById("valpr"+a).innerHTML= cart["pr" +a];
+  updatecart(cart);
+}
+
+);
+
+
+  </script>
+  {% endblock %}
+
+
+
+
+
+
+
+
+   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  // Load cart from localStorage or initialize empty cart
+  let cart = localStorage.getItem("cart") ? JSON.parse(localStorage.getItem("cart")) : {};
+
+  function updatecart(cart) {
+    let totalItems = 0;
+
+    for (let item in cart) {
+      totalItems += cart[item];
+
+      const div = document.getElementById("div" + item);
+      if (div) {
+        div.innerHTML = `
+          <button id="minus${item}" class="btn btn-primary minus"> - </button>
+          <span id="val${item}">${cart[item]}</span>
+          <button id="plus${item}" class="btn btn-primary plus"> + </button>
+        `;
+      }
+    }
+
+    document.getElementById("cart").innerText = totalItems;
+    localStorage.setItem("cart", JSON.stringify(cart));
+    updatePopover(cart);
+  }
+
+  function updatePopover(cart) {
+    let popStr = "<h5>Your Cart</h5><hr>";
+    let i = 1;
+
+    for (let item in cart) {
+      const nameEl = document.getElementById("name" + item);
+      const name = nameEl ? nameEl.innerText : item;
+      popStr += `<b>${i}</b>. ${name} - Qty: ${cart[item]}<br>`;
+      i++;
+    }
+
+    if (i === 1) {
+      popStr += "Cart is empty";
+    }
+
+    popStr += `
+      <hr>
+      <button class="btn btn-danger btn-sm" onclick="clearcart()">Clear Cart</button>
+      <a href="/shop/checkout/">
+        <button class="btn btn-success btn-sm ms-2">Checkout</button>
+      </a>
+    `;
+
+    $('#popcart').attr('data-bs-content', popStr).popover('dispose').popover({ html: true, trigger: 'focus' });
+  }
+
+  function clearcart() {
+    for (let item in cart) {
+      const div = document.getElementById("div" + item);
+      if (div) {
+        div.innerHTML = `<button id="${item}" class="btn btn-primary cart">Add To CART</button>`;
+      }
+    }
+    cart = {};
+    localStorage.clear();
+    updatecart(cart);
+  }
+
+  $(document).on("click", ".cart", function () {
+    const id = this.id;
+    cart[id] = (cart[id] || 0) + 1;
+    updatecart(cart);
+  });
+
+  $(document).on("click", ".plus", function () {
+    const id = this.id.slice(4);
+    cart[id] = (cart[id] || 0) + 1;
+    updatecart(cart);
+  });
+
+  $(document).on("click", ".minus", function () {
+    const id = this.id.slice(5);
+    cart[id] = Math.max(0, cart[id] - 1);
+    if (cart[id] === 0) delete cart[id];
+    updatecart(cart);
+  });
+
+  $(document).ready(function () {
+    $('#popcart').popover({ html: true, trigger: 'focus' });
+    updatecart(cart);
+  });
+</script>
